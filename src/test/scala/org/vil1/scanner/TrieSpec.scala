@@ -7,20 +7,14 @@ import org.specs2.mutable._
  */
 class TrieSpec extends Specification {
 
-  "A TrieBuilder[Char]" should {
-    "build an instance of Trie[Char]" in {
-      val tb = new TrieBuilder[Char]()
-      tb.build must not be(null)
-    }
-  }
 
   """A Trie built using "foo", "bar", and "baz"  """ should {
     """contain "foo", "bar" and "baz" """ in {
-      val trie = new TrieBuilder[Char](Seq("foo", "bar", "baz")).build
+      val trie:Trie[Char] = Trie("foo".toList, "bar".toList, "baz".toList)
       val words = trie.words
-      words must contain("foo".toSeq)
-      words must contain("foo".toSeq)
-      words must contain("foo".toSeq)
+      words must contain("foo".toList)
+      words must contain("foo".toList)
+      words must contain("foo".toList)
     }
   }
 }

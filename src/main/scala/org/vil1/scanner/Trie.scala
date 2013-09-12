@@ -1,41 +1,59 @@
 package org.vil1.scanner
 
+
 /**
  * @author Valentin Kasas
  */
 
-sealed trait Trie[A] {
+object Trie {
+  def apply[A](word : List[A]):Trie[A] = word match {
+    case Nil => TrieLeaf[A]()
+    case head :: tail => TrieNode[A](Map(head -> Trie(tail)))
+  }
 
-}
-
-case class TrieNode[A](children : Map[A,TrieNode[A]]) extends Trie[A]  {
-  def words:Seq[Seq[A]] = for  {
-    (a , child) <- children.toList
-  } yield {
-    child.words.flatMap(word => a :: word.toList)
+  def apply[A](words: List[A]*):Trie[A] = {
+    var trie:Trie[A] = TrieLeaf[A]()
+    words foreach(w => trie = (trie + w))
+    trie
   }
 }
 
-class TrieBuilder[A] {
-  private[this] var trie : TrieNode[A] = TrieNode(Map.empty)
+sealed trait Trie[A] extends PartialFunction[A,Trie[A]] {
+  def words:List[List[A]]
+  def +(word :List[A]):Trie[A]
 
-  def addWord[Repr](word: Seq[A]) {
-    def addFirstElem(t: TrieNode[A], elems: Seq[A]):TrieNode[A] =
-      if (elems.isEmpty) t
-      else {
-        val tt = t.children.withDefault(_x => TrieNode(Map.empty[A,TrieNode[A]]))(elems.head)
-        t.copy(children = t.children + (elems.head -> addFirstElem(tt, elems.tail)))
+  def apply(v1: A) = ???
+}
+
+case class TrieLeaf[A]() extends Trie[A]{
+  def words = List(Nil)
+
+  def isDefinedAt(x: A) = false
+
+  def +(word: List[A]):Trie[A] = word match {
+    case Nil => this
+    case head :: tail => TrieNode[A](Map(head -> Trie(tail)))
+  }
+}
+
+case class TrieNode[A](children : Map[A,Trie[A]] = Map[A,Trie[A]]()) extends Trie[A]  {
+  def words:List[List[A]] = children.toList.flatMap{
+    case (a,TrieLeaf()) => List(List(a))
+    case (a,t:TrieNode[A]) => t.words.map( a :: _)
+  }
+
+  def isDefinedAt(x: A) = children.isDefinedAt(x)
+
+  def +(word: List[A]):Trie[A] = word match {
+    case Nil => this
+    case head :: tail =>
+      if(this isDefinedAt head){
+        copy(children = children + ( head -> (children(head) + tail)))
+      } else {
+        copy(children = children + (head -> Trie(tail)))
       }
-    trie = addFirstElem(trie, word)
-
   }
-
-  def this(words : Seq[Seq[A]]) = {
-    this
-    words foreach addWord
-  }
-
-  def build = trie
-
 }
+
+
 
